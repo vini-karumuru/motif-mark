@@ -14,6 +14,15 @@ def get_args():
     return parser.parse_args()
 args = get_args()
 
+# create dictionary of degenerate bases
+deg_bases = {
+    "T": "T|U",
+    "U": "T|U",
+    "R": "A|G",
+    "Y": "C|T",
+    "N": "A|C|T|G|U"
+}
+
 
 # CLASSES -------------------------------------------------------------------------------------------
 
@@ -25,7 +34,7 @@ class ListofGenes:
         gene_obj = Gene(header, sequence)
         self.genes.append(gene_obj)
     
-    def draw_gene_bases(self, x_margin, gene_height):
+    def draw_gene_base(self, x_margin, gene_height):
 
         num_genes = len(self.genes)
         longest_gene_len = max([gene.length for gene in self.genes])
@@ -44,12 +53,13 @@ class ListofGenes:
         for ind, gene in enumerate(self.genes):
         
             # set thickness of line
-            ctx.set_line_width(2)
+            ctx.set_line_width(4)
             # round ends of line
             ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
             # calculate y-location of line
             y_loc = (ind * (gene_height * 3)) + (gene_height * (1.5))
+            gene.y_loc = y_loc
 
             # define location of line
             ctx.move_to(x_margin, y_loc) # start
@@ -57,6 +67,14 @@ class ListofGenes:
 
             # draw line
             ctx.stroke()
+
+        # draw exons
+        for gene in self.genes:
+
+            ctx.rectangle(x_margin + gene.exon_start, gene.y_loc - (gene_height/2), gene.exon_len, gene_height)
+
+            ctx.fill()
+        
 
         return surface
 
@@ -72,8 +90,22 @@ class Gene:
 
     def get_exon_loc(self):
         exon_match = re.search(r"[A-Z]+", sequence)
-        self.exon =  [exon_match.start() + 1, exon_match.end()]
-        self.exon_seq = sequence[exon_match.start(): exon_match.end()]
+        self.exon_start =  exon_match.start() + 1
+        self.exon_len = exon_match.end() - exon_match.start()
+        # captialize entire gene sequence
+        self.sequence = self.sequence.upper()
+
+
+class ListofMotifs:
+    def __init__(self, sequence):
+        self.get_motif_poss()
+    
+    def get_motif_poss(self):
+        motif = sequence.upper()
+        self.motif_regex = "".join([deg_bases[char] if char in deg_bases else char for char in motif])
+
+
+
 
 
 
@@ -110,9 +142,8 @@ with open(args.fasta, 'r') as fasta:
     # set up Gene object for last entry in FASTA file
     all_genes.set_up_gene(header, sequence)
 
-    #print([gene.exon for gene in all_genes.genes])
-    #print([gene.exon_seq for gene in all_genes.genes])
 
 
-    surface = all_genes.draw_gene_bases(20, 20)
+
+    surface = all_genes.draw_gene_base(20, 30)
     surface.write_to_png("motif_mark_output.png")
