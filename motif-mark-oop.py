@@ -59,7 +59,7 @@ class ListofGenes:
 
             # calculate y-location of line
             y_loc = (ind * (gene_height * 3)) + (gene_height * (1.5))
-            gene.y_loc = y_loc
+            setattr(gene, 'y_loc', y_loc)
 
             # define location of line
             ctx.move_to(x_margin, y_loc) # start
@@ -96,6 +96,9 @@ class Gene:
         #self.sequence = self.sequence.upper()
 
 
+
+colors = [(1, 0.984, 0), (1, 0.604, 0.231), (1, 0.604, 0.98), (0.078 , 0.439, 0.42)]
+
 class ListofMotifs:
     def __init__(self):
         self.motifs = []
@@ -104,21 +107,46 @@ class ListofMotifs:
         motif_obj = Motif(motif_seq)
         self.motifs.append(motif_obj)
 
+    def find_motifs(self, gene_objs: list[Gene]):
+        for motif in self.motifs:
+            motif.find_motifs(gene_objs)
+
+    def draw_motifs(self, surface, x_margin, gene_height):
+        ctx = cairo.Context(surface)
+        for ind, motif in enumerate(self.motifs):
+            ctx.set_source_rgb(*colors[ind])
+            print(*colors[ind])
+            for gene_y_loc in motif.motif_instances:
+                for motif_instance in motif.motif_instances[gene_y_loc]:
+                    
+                    ctx.rectangle(x_margin + motif_instance + 1, gene_y_loc - (gene_height/2), motif.length, gene_height)
+                    print(ctx.get_source().get_rgba())
+                    ctx.fill()
+                    #ctx.new_path()
+        return surface
+
+
 
 
 class Motif:
     def __init__(self, motif_seq):
         self.orig_motif = motif_seq
+        self.length = len(motif_seq)
         self.get_motif_poss()
-        self.motif_instances = []
+        # key is y-loc, value is list of start positions (1-based)
+        self.motif_instances = {}
     
     def get_motif_poss(self):
         motif_upper = self.orig_motif.upper()
         self.motif_regex = "".join([("(" + deg_bases[char]+ ")") if char in deg_bases else char for char in motif_upper])
 
-class MotifInstance:
-    def __init__(self):
-        pass
+    def find_motifs(self, gene_objs: list[Gene]):
+        for obj in gene_objs:
+            motif_instances = re.finditer(self.motif_regex, obj.sequence, flags = re.IGNORECASE)
+            self.motif_instances[obj.y_loc] = [instance.start() for instance in motif_instances]
+            
+
+
 
 
 
@@ -163,6 +191,9 @@ with open(args.motifs) as motifs_file:
         all_motifs.set_up_motif(line)
 
 
-print([obj.motif_regex for obj in all_motifs.motifs])
+
 surface = all_genes.draw_gene_base(20, 30)
+all_motifs.find_motifs(all_genes.genes)
+surface = all_motifs.draw_motifs(surface, 20, 30)
+
 surface.write_to_png("motif_mark_output.png")
