@@ -27,8 +27,8 @@ deg_bases = {
 # CLASSES -------------------------------------------------------------------------------------------
 
 class ListofGenes:
-    def __init__(self, list_of_genes: list[Gene]):
-        self.genes = list_of_genes
+    def __init__(self):
+        self.genes = []
 
     def set_up_gene(self, header, sequence):
         gene_obj = Gene(header, sequence)
@@ -89,24 +89,36 @@ class Gene:
 
 
     def get_exon_loc(self):
-        exon_match = re.search(r"[A-Z]+", sequence)
+        exon_match = re.search("[A-Z]+", sequence)
         self.exon_start =  exon_match.start() + 1
         self.exon_len = exon_match.end() - exon_match.start()
         # captialize entire gene sequence
-        self.sequence = self.sequence.upper()
+        #self.sequence = self.sequence.upper()
 
 
 class ListofMotifs:
-    def __init__(self, sequence):
+    def __init__(self):
+        self.motifs = []
+
+    def set_up_motif(self, motif_seq):
+        motif_obj = Motif(motif_seq)
+        self.motifs.append(motif_obj)
+
+
+
+class Motif:
+    def __init__(self, motif_seq):
+        self.orig_motif = motif_seq
         self.get_motif_poss()
+        self.motif_instances = []
     
     def get_motif_poss(self):
-        motif = sequence.upper()
-        self.motif_regex = "".join([deg_bases[char] if char in deg_bases else char for char in motif])
+        motif_upper = self.orig_motif.upper()
+        self.motif_regex = "".join([("(" + deg_bases[char]+ ")") if char in deg_bases else char for char in motif_upper])
 
-
-
-
+class MotifInstance:
+    def __init__(self):
+        pass
 
 
 
@@ -114,15 +126,14 @@ class ListofMotifs:
 # MAIN CODE -------------------------------------------------------------------------------------------
 
 # initialize ListofGenes object
-all_genes = ListofGenes([])
-
+all_genes = ListofGenes()
 
 # parse input FASTA file & collect each gene's information into a Gene object
-with open(args.fasta, 'r') as fasta:
+with open(args.fasta, 'r') as fasta_file:
     # initialize a sequence variable to hold the entire sequence of an entry
     sequence = ""
     # loop through lines of FASTA file
-    for ind, line in enumerate(fasta):
+    for ind, line in enumerate(fasta_file):
         line = line.strip("\n")
         # save first line as header
         if ind == 0:
@@ -142,8 +153,16 @@ with open(args.fasta, 'r') as fasta:
     # set up Gene object for last entry in FASTA file
     all_genes.set_up_gene(header, sequence)
 
+# initialize ListofMotifs object
+all_motifs = ListofMotifs()
+
+# parse input motifs file & initialize a Motif object for each motif
+with open(args.motifs) as motifs_file:
+    for line in motifs_file:
+        line = line.strip("\n")
+        all_motifs.set_up_motif(line)
 
 
-
-    surface = all_genes.draw_gene_base(20, 30)
-    surface.write_to_png("motif_mark_output.png")
+print([obj.motif_regex for obj in all_motifs.motifs])
+surface = all_genes.draw_gene_base(20, 30)
+surface.write_to_png("motif_mark_output.png")
