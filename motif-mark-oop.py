@@ -56,7 +56,7 @@ class ListofGenes:
         ctx.fill()
 
         # set color to black for drawing gene
-        ctx.set_source_rgb(0, 0, 0)
+        ctx.set_source_rgb(0.121, 0.165, 0.212)
 
         # draw introns
         for ind, gene in enumerate(self.genes):
@@ -117,7 +117,7 @@ class Gene:
 
 
 
-colors = [(1, 0.984, 0), (1, 0.604, 0.231), (1, 0.604, 0.98), (0.078 , 0.439, 0.42), (0.234, 0.623, 0.834)]
+colors = [(0.921, 0.788, 0.725), (0.788, 0.863, 0.902), (0.867, 0.557, 0.345), (0.784, 0.765, 0.855), (0.741 , 0.757, 0.639)]
 
 class ListofMotifs:
     def __init__(self):
@@ -226,8 +226,8 @@ with open(args.motifs) as motifs_file:
         all_motifs.set_up_motif(line)
 
 
-x_margin = 20
-gene_height = 80
+x_margin = 30
+gene_height = 100
 surface = all_genes.draw_gene_base(x_margin, gene_height)
 all_motifs.find_motifs(all_genes.genes)
 surface = all_motifs.draw_motifs(surface, x_margin, gene_height)
