@@ -28,7 +28,7 @@ deg_bases = {
 
 class ListofGenes:
     def __init__(self):
-        self.genes = []
+        self.genes: list[Gene] = []
 
     def set_up_gene(self, header, sequence):
         gene_obj = Gene(header, sequence)
@@ -36,17 +36,21 @@ class ListofGenes:
     
     def draw_gene_base(self, x_margin, gene_height):
 
+        # count number of genes
         num_genes = len(self.genes)
+        # get length of longest gene
         longest_gene_len = max([gene.length for gene in self.genes])
 
+        # width of surface = length of longest gene plus margin on each side
         surface_width = longest_gene_len + (2 * x_margin)
-        # extra space at bottom for key
+        # height of surface = space for each gene + extra space at bottom for key
         surface_height = (num_genes + 1) * (gene_height * 3)
 
+        # set up surface
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface_width, surface_height)
         ctx = cairo.Context(surface)
 
-        # black
+        # set color to black for drawing gene
         ctx.set_source_rgb(0, 0, 0)
 
         # draw introns
@@ -92,8 +96,7 @@ class Gene:
         exon_match = re.search("[A-Z]+", sequence)
         self.exon_start =  exon_match.start() + 1
         self.exon_len = exon_match.end() - exon_match.start()
-        # captialize entire gene sequence
-        #self.sequence = self.sequence.upper()
+
 
 
 
@@ -115,14 +118,12 @@ class ListofMotifs:
         ctx = cairo.Context(surface)
         for ind, motif in enumerate(self.motifs):
             ctx.set_source_rgb(*colors[ind])
-            print(*colors[ind])
             for gene_y_loc in motif.motif_instances:
                 for motif_instance in motif.motif_instances[gene_y_loc]:
                     
                     ctx.rectangle(x_margin + motif_instance + 1, gene_y_loc - (gene_height/2), motif.length, gene_height)
-                    print(ctx.get_source().get_rgba())
                     ctx.fill()
-                    #ctx.new_path()
+
         return surface
 
 
@@ -138,15 +139,13 @@ class Motif:
     
     def get_motif_poss(self):
         motif_upper = self.orig_motif.upper()
-        self.motif_regex = "".join([("(" + deg_bases[char]+ ")") if char in deg_bases else char for char in motif_upper])
+        self.motif_regex = "(?=" + "".join([("(" + deg_bases[char]+ ")") if char in deg_bases else char for char in motif_upper]) + ")"
 
     def find_motifs(self, gene_objs: list[Gene]):
         for obj in gene_objs:
             motif_instances = re.finditer(self.motif_regex, obj.sequence, flags = re.IGNORECASE)
             self.motif_instances[obj.y_loc] = [instance.start() for instance in motif_instances]
             
-
-
 
 
 
