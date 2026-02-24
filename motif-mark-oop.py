@@ -114,14 +114,26 @@ class ListofMotifs:
         for motif in self.motifs:
             motif.find_motifs(gene_objs)
 
+    # def draw_motifs(self, surface, x_margin, gene_height):
+    #     ctx = cairo.Context(surface)
+    #     for ind, motif in enumerate(self.motifs):
+    #         ctx.set_source_rgb(*colors[ind])
+    #         for gene_y_loc in motif.motif_instances:
+    #             for motif_instance in motif.motif_instances[gene_y_loc]:
+                    
+    #                 ctx.rectangle(x_margin + motif_instance + 1, gene_y_loc - (gene_height/2), motif.length, gene_height)
+    #                 ctx.fill()
+
+    #     return surface
+    
     def draw_motifs(self, surface, x_margin, gene_height):
         ctx = cairo.Context(surface)
         for ind, motif in enumerate(self.motifs):
             ctx.set_source_rgb(*colors[ind])
             for gene_y_loc in motif.motif_instances:
                 for motif_instance in motif.motif_instances[gene_y_loc]:
-                    
-                    ctx.rectangle(x_margin + motif_instance + 1, gene_y_loc - (gene_height/2), motif.length, gene_height)
+                    motif_y_loc = gene_y_loc + (gene_height/2) - ((ind + 1) * gene_height/len(self.motifs))
+                    ctx.rectangle(x_margin + motif_instance + 1,motif_y_loc, motif.length, gene_height/len(self.motifs))
                     ctx.fill()
 
         return surface
@@ -191,8 +203,8 @@ with open(args.motifs) as motifs_file:
 
 
 
-surface = all_genes.draw_gene_base(20, 30)
+surface = all_genes.draw_gene_base(20, 80)
 all_motifs.find_motifs(all_genes.genes)
-surface = all_motifs.draw_motifs(surface, 20, 30)
+surface = all_motifs.draw_motifs(surface, 20, 80)
 
 surface.write_to_png("motif_mark_output.png")
