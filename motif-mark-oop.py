@@ -283,4 +283,6 @@ surface = all_motifs.draw_motifs(surface, x_margin, gene_height)
 surface = all_motifs.draw_key(surface, gene_height/len(all_motifs.motifs))
 surface = all_genes.draw_headers(surface, x_margin, gene_height)
 
-surface.write_to_png("motif_mark_output.png")
+
+out_file_prefix = args.fasta.split(".")[-2]
+surface.write_to_png(f"{out_file_prefix}.png")
