@@ -42,9 +42,9 @@ class ListofGenes:
         longest_gene_len = max([gene.length for gene in self.genes])
 
         # width of surface = length of longest gene plus margin on each side
-        surface_width = longest_gene_len + (2 * x_margin)
-        # height of surface = space for each gene + extra space at bottom for key
-        surface_height = num_genes * (gene_height * 3) + 80
+        surface_width = (longest_gene_len * 4) + (2 * x_margin)
+        # height of surface = space for each gene + extra space at bottom + top for title & key
+        surface_height = num_genes * (gene_height * 3) + 513
 
         # set up surface
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface_width, surface_height)
@@ -62,24 +62,24 @@ class ListofGenes:
         for ind, gene in enumerate(self.genes):
         
             # set thickness of line
-            ctx.set_line_width(4)
+            ctx.set_line_width(6)
             # round ends of line
             ctx.set_line_cap(cairo.LINE_CAP_ROUND)
 
             # calculate y-location of line
-            y_loc = (ind * (gene_height * 3)) + (gene_height * (1.5))
+            y_loc = (ind * (gene_height * 3)) + (gene_height * (1.5)) + 285
             setattr(gene, 'y_loc', y_loc)
 
             # define location of line
             ctx.move_to(x_margin, y_loc) # start
-            ctx.line_to(x_margin + gene.length, y_loc) # end
+            ctx.line_to(x_margin + (gene.length * 4), y_loc) # end
 
             # draw line
             ctx.stroke()
 
         # draw exons
         for gene in self.genes:
-            ctx.rectangle(x_margin + gene.exon_start, gene.y_loc - (gene_height/2), gene.exon_len, gene_height)
+            ctx.rectangle(x_margin + (gene.exon_start * 4), gene.y_loc - (gene_height/2), gene.exon_len * 4, gene_height)
             ctx.fill()
 
         return surface
@@ -89,12 +89,12 @@ class ListofGenes:
         for gene in self.genes:
             ctx.set_source_rgb(0, 0, 0)
             ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-            ctx.set_font_size(25)
+            ctx.set_font_size(70)
             ctx.move_to(x_margin, gene.y_loc - gene_height)
             ctx.show_text(gene.header.strip(">").split(" ")[0])
             ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-            ctx.set_font_size(15)
-            ctx.move_to(x_margin, gene.y_loc - gene_height + 15)
+            ctx.set_font_size(40)
+            ctx.move_to(x_margin, gene.y_loc - gene_height + 40)
             ctx.show_text(" ".join(gene.header.split(" ")[1:]))
 
         return surface
@@ -117,7 +117,7 @@ class Gene:
 
 
 
-colors = [(0.921, 0.788, 0.725), (0.788, 0.863, 0.902), (0.867, 0.557, 0.345), (0.784, 0.765, 0.855), (0.741 , 0.757, 0.639)]
+colors = [(0.921, 0.788, 0.725), (0.573, 0.678, 0.643), (0.867, 0.557, 0.345), (0.996, 0.847, 0.651), (0.784, 0.765, 0.855)]
 
 class ListofMotifs:
     def __init__(self):
@@ -138,26 +138,44 @@ class ListofMotifs:
             for gene_y_loc in motif.motif_instances:
                 for motif_instance in motif.motif_instances[gene_y_loc]:
                     motif_y_loc = gene_y_loc - (gene_height/2) + ((ind) * gene_height/len(self.motifs))
-                    ctx.rectangle(x_margin + motif_instance + 1,motif_y_loc, motif.length, gene_height/len(self.motifs))
+                    ctx.rectangle(x_margin + (motif_instance + 1) * 4, motif_y_loc, motif.length * 4, gene_height/len(self.motifs))
                     ctx.fill()
+                    ctx.set_line_width(2)
+                    ctx.move_to(x_margin + (motif_instance + 1) * 4 + (motif.length * 4) - 1, motif_y_loc - 10)
+                    ctx.line_to(x_margin + (motif_instance + 1) * 4 + (motif.length * 4) -1 , motif_y_loc + 10)
+                    ctx.stroke()
+                    ctx.set_source_rgb(*colors[ind])
+
+
         return surface
     
-    def draw_key(self, surface, x_margin):
+    def draw_key(self, surface, motif_height):
         ctx = cairo.Context(surface)
         current_x_loc = x_margin
-        y_loc = surface.get_height() - 60
+        y_loc = surface.get_height() - 120
         for ind, motif in enumerate(self.motifs):
             ctx.set_source_rgb(*colors[ind])
-            ctx.rectangle(current_x_loc, y_loc, 25, 25)
+            ctx.rectangle(current_x_loc, y_loc, motif.length * 4, motif_height)
             ctx.fill()
-            current_x_loc += 33
+            current_x_loc += ((motif.length * 4) + 13)
             ctx.set_source_rgb(0, 0, 0)
             ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
-            ctx.set_font_size(25)
-            ctx.move_to(current_x_loc, surface.get_height() - 41)
+            ctx.set_font_size(40)
+            ctx.move_to(current_x_loc, y_loc + 35)
             ctx.show_text(motif.orig_motif)
             _, _, text_width, _, _, _ = ctx.text_extents(motif.orig_motif)
-            current_x_loc += (text_width + 30)
+            current_x_loc += (text_width + 70)
+
+            # add header for key
+            ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
+            ctx.set_font_size(70)
+            ctx.move_to(x_margin, y_loc - 50)
+            ctx.show_text("Motif Key")
+
+        # add bar separating key from genes
+        ctx.set_source_rgb(0.121, 0.165, 0.212)
+        ctx.rectangle(0, y_loc - 190, surface.get_width(), 35)
+        ctx.fill()
 
         return surface
     
@@ -187,6 +205,24 @@ class Motif:
 
 
 # MAIN CODE -------------------------------------------------------------------------------------------
+
+def draw_header(surface, fasta_file):
+    ctx = cairo.Context(surface)
+    ctx.set_source_rgb(0.121, 0.165, 0.212)
+    ctx.rectangle(0, 0, surface.get_width(), 250)
+    ctx.fill()
+
+
+    fasta_title = fasta_file.split("/")[-1]
+    ctx.set_source_rgb(1, 1, 1)
+    ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+    ctx.set_font_size(105)
+    ctx.move_to(x_margin, 165)
+    ctx.show_text(f"Motifs on Genes From {fasta_title}")
+
+    return surface
+
+
 
 # initialize ListofGenes object
 all_genes = ListofGenes()
@@ -226,12 +262,13 @@ with open(args.motifs) as motifs_file:
         all_motifs.set_up_motif(line)
 
 
-x_margin = 30
-gene_height = 100
+x_margin = 140
+gene_height = 200
 surface = all_genes.draw_gene_base(x_margin, gene_height)
+surface = draw_header(surface, args.fasta)
 all_motifs.find_motifs(all_genes.genes)
 surface = all_motifs.draw_motifs(surface, x_margin, gene_height)
-surface = all_motifs.draw_key(surface, x_margin)
+surface = all_motifs.draw_key(surface, gene_height/len(all_motifs.motifs))
 surface = all_genes.draw_headers(surface, x_margin, gene_height)
 
 surface.write_to_png("motif_mark_output.png")
