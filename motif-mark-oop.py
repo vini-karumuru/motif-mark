@@ -44,7 +44,7 @@ class ListofGenes:
         # width of surface = length of longest gene plus margin on each side
         surface_width = (longest_gene_len * 4) + (2 * x_margin)
         # height of surface = space for each gene + extra space at bottom + top for title & key
-        surface_height = num_genes * (gene_height * 3) + 513
+        surface_height = num_genes * (gene_height * 3) + 490
 
         # set up surface
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface_width, surface_height)
@@ -157,25 +157,37 @@ class ListofMotifs:
             ctx.set_source_rgb(*colors[ind])
             ctx.rectangle(current_x_loc, y_loc, motif.length * 4, motif_height)
             ctx.fill()
+        
+            ctx.set_line_width(2)
+            ctx.move_to(current_x_loc + (motif.length * 4) - 1, y_loc)
+            ctx.line_to(current_x_loc + (motif.length * 4) - 1, y_loc - 10)
+            ctx.stroke()
+
             current_x_loc += ((motif.length * 4) + 13)
+
             ctx.set_source_rgb(0, 0, 0)
             ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
             ctx.set_font_size(40)
             ctx.move_to(current_x_loc, y_loc + 35)
             ctx.show_text(motif.orig_motif)
             _, _, text_width, _, _, _ = ctx.text_extents(motif.orig_motif)
-            current_x_loc += (text_width + 70)
+            current_x_loc += (text_width + 110)
 
-            # add header for key
-            ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
-            ctx.set_font_size(70)
-            ctx.move_to(x_margin, y_loc - 50)
-            ctx.show_text("Motif Key")
+            
+
+            
 
         # add bar separating key from genes
         ctx.set_source_rgb(0.121, 0.165, 0.212)
-        ctx.rectangle(0, y_loc - 190, surface.get_width(), 35)
+        ctx.rectangle(0, y_loc - 190, surface.get_width(), 125)
         ctx.fill()
+
+        # add header for key
+        ctx.set_source_rgb(1, 1, 1)
+        ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
+        ctx.set_font_size(70)
+        ctx.move_to(x_margin, y_loc - 109)
+        ctx.show_text("Motif Key")
 
         return surface
     
