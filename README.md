@@ -1,5 +1,5 @@
 # motif-mark
-motif-mark is a Python script that utilizes object-oriented programming to visualize motifs on gene sequences. It produces a figure that looks something like this: <br>
+motif-mark is a Python script that utilizes object-oriented programming to visualize motifs on gene sequences. It produces a figure that looks something like this: <br><br>
 ![Figure_1.png](./example/Figure_1.png)
 
 ## Requirements
@@ -9,6 +9,7 @@ conda install -c conda-forge pycairo
 ```
 
 ## Usage
+Ensure the script is executable, then run it from the command line:
 ```
 ./motif-mark-oop.py -f <input_fasta_file> -m <motifs_file>
 ```
@@ -39,7 +40,7 @@ motif-mark produces 2 output files:
 - Tick marks protruding from the tops of motif boxes (visible when image is zoomed in) indicate the end point of the motif, and are useful to identify overlapping motifs
 
 #### ```<input_fasta_file_prefix>_stats.md```
-- Example:
+- Example: [Figure_1_stats.md](./example/Figure_1_stats.md)
 - A Markdown table with genes as rows and motifs as columns, containing counts of each motif's occurrences within each gene
 
 

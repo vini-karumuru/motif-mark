@@ -34,7 +34,7 @@ class ListofGenes:
         gene_obj = Gene(header, sequence)
         self.genes.append(gene_obj)
     
-    def draw_gene_base(self, x_margin, gene_height):
+    def draw_gene_base(self):
 
         # count number of genes
         num_genes = len(self.genes)
@@ -84,7 +84,7 @@ class ListofGenes:
 
         return surface
     
-    def draw_headers(self, surface, x_margin, gene_height):
+    def draw_headers(self, surface):
         ctx = cairo.Context(surface)
         for gene in self.genes:
             ctx.set_source_rgb(0, 0, 0)
@@ -131,7 +131,7 @@ class ListofMotifs:
         for motif in self.motifs:
             motif.find_motifs(gene_objs)
     
-    def draw_motifs(self, surface, x_margin, gene_height):
+    def draw_motifs(self, surface):
         ctx = cairo.Context(surface)
         for ind, motif in enumerate(self.motifs):
             ctx.set_source_rgb(*colors[ind])
@@ -218,13 +218,12 @@ class Motif:
 
 # MAIN CODE -------------------------------------------------------------------------------------------
 
+# define a function to draw header
 def draw_header(surface, fasta_file):
     ctx = cairo.Context(surface)
     ctx.set_source_rgb(0.121, 0.165, 0.212)
     ctx.rectangle(0, 0, surface.get_width(), 250)
     ctx.fill()
-
-
     fasta_title = fasta_file.split("/")[-1]
     ctx.set_source_rgb(1, 1, 1)
     ctx.select_font_face("monospace", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_NORMAL)
@@ -276,13 +275,45 @@ with open(args.motifs) as motifs_file:
 
 x_margin = 140
 gene_height = 200
-surface = all_genes.draw_gene_base(x_margin, gene_height)
+surface = all_genes.draw_gene_base()
 surface = draw_header(surface, args.fasta)
 all_motifs.find_motifs(all_genes.genes)
-surface = all_motifs.draw_motifs(surface, x_margin, gene_height)
-surface = all_motifs.draw_key(surface, gene_height/len(all_motifs.motifs))
-surface = all_genes.draw_headers(surface, x_margin, gene_height)
+num_motifs = len(all_motifs.motifs)
+surface = all_motifs.draw_motifs(surface)
+surface = all_motifs.draw_key(surface, gene_height/num_motifs)
+surface = all_genes.draw_headers(surface)
 
 
+
+# extract output file prefix from input fasta file name by removing file extension
 out_file_prefix = args.fasta.split(".")[-2]
+
+# save drawing as output png file
 surface.write_to_png(f"{out_file_prefix}.png")
+
+# write motif counts per gene to a markdown file
+with open(f"{out_file_prefix}_stats.md", 'w') as fh:
+    # create header line
+    fh.write("| |")
+    for motif_seq in [motif_obj.orig_motif for motif_obj in all_motifs.motifs]:
+        fh.write(f"{motif_seq}|")
+    fh.write("\n|")
+    # create delimiter row
+    for motif in range(num_motifs + 1):
+        fh.write("-|")
+    fh.write("\n|")
+    # loop through genes
+    for ind, gene in enumerate(all_genes.genes):
+        # extract gene name from header
+        fh.write(f"{gene.header.strip(">").split(" ")[0]}|")
+        # loop through motifs
+        for motif in all_motifs.motifs:
+            # count occurence of motif within gene
+            fh.write(f"{len(motif.motif_instances[gene.y_loc])}|")
+        fh.write("\n")
+        # don't add new pipe character if last line of table has been written
+        if ind < (len(all_genes.genes) - 1):
+            fh.write("|")
+
+
+
